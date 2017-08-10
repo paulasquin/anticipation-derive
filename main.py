@@ -20,6 +20,10 @@ def miseAJour(lieuxVent):
     return(0);
 
 def anticipationGraphique(id_lieu, minutesDer):
+    print('\n\n -------------------- \n');
+    if minutesDer == 0:
+        print('Valeur entrée laissée à 0. On prend 15 minutes par défaut');
+        minutesDer = 15;
     print('\nDérive de ' + str(minutesDer) + ' minutes');
     dep = Anticipation.getDepRepos(id_lieu, minutesDer);
     zoneU, start, zoneD, startD, GPSOptm = Anticipation.calculAnticipation(id_lieu, dep);

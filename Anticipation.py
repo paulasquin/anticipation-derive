@@ -21,18 +21,14 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
     while i < len(heuresMAJ) and deb.hour > heuresMAJ[i]:
         i = i + 1;
     if i == 0:#Si deb.hour < 2
-        heureD = heureD + datetime.timedelta(days = - 1, hours = -heureD.hour + 23, minutes = -heureD.minute, second = -heureD.seconds);#On set heureD à 23h le jour précédent        
+        heureD = heureD + datetime.timedelta(days = - 1, hours = -heureD.hour + 23, minutes = -heureD.minute, second = -heureD.seconds, microseconds = -heureD.microsecond);#On set heureD à 23h le jour précédent        
     else:
-        heureD = heureD + datetime.timedelta(hours = -heureD.hour + heuresMAJ[i-1], minutes = -heureD.minute, seconds = -heureD.second);
+        heureD = heureD + datetime.timedelta(hours = -heureD.hour + heuresMAJ[i], minutes = -heureD.minute, seconds = -heureD.second, microseconds = -heureD.microsecond);
     #On a à présent heureD l'heure de référence antérieur à l'heure de début
-    print('Heure D : ' + str(heureD));
-    
+        
     lesHeuresRef = [heureD];
     while lesHeuresRef[-1] + datetime.timedelta(hours = 3) < fin:
         lesHeuresRef.append(lesHeuresRef[-1]+datetime.timedelta(hours = 3));
-
-    for i in range(len(lesHeuresRef)):
-        print('lesHeuresRef = '+ str(lesHeuresRef[i]));
 
     coefsTemps = [];#Secondes de dérive par vecteur.
 
@@ -56,7 +52,6 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
     dep = [];
     for i in range(len(vents)):#Pondération des déplacements par le temps resté sur chaque vecteur
         dep.append([vents[i][0]*coefDepVent*coefsTemps[i], vents[i][1]*coefDepVent*coefsTemps[i]]);
-    print('Dep ' + str(dep));
     return(dep);
 
 
@@ -140,8 +135,6 @@ def affichageAnticipation(zoneU, startU, zoneD, startD, dep, nom_lieu, GPSOptm):
     [latOptm, lonOptm] = GPSOptm;
 
     coefAff = arrondir(min([1920/zoneDX, 1920/zoneX, 1080/zoneY, 1080/zoneDY])*0.5, 2);
-    print(zoneDY);
-    print(coefAff);
     affDep = [];
     for i in range(len(dep)):#Affectation du coefficient d'affichage
         affDepX, affDepY = dep[i][0]*coefAff, dep[i][1]*coefAff;
