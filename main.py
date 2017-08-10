@@ -19,8 +19,9 @@ def miseAJour(lieuxVent):
     BotVent.recuperationDonneesVent(tabDonnees);
     return(0);
 
-def anticipationGraphique(id_lieu):
-    dep = Anticipation.getDepRepos(id_lieu);
+def anticipationGraphique(id_lieu, minutesDer):
+    print('\nDérive de ' + str(minutesDer) + ' minutes');
+    dep = Anticipation.getDepRepos(id_lieu, minutesDer);
     zoneU, start, zoneD, startD, GPSOptm = Anticipation.calculAnticipation(id_lieu, dep);
     Anticipation.affichageAnticipation(zoneU, start, zoneD, startD, dep, nom_lieux[id_lieu], GPSOptm);
     return(0);
@@ -29,22 +30,37 @@ def interfaceGraphique():
     fenetre = Tk();
     fenetre.title('Interface Anticipation');
     FrameOutils= LabelFrame(fenetre, text='Outils',borderwidth=1);
-    FrameOutils.grid(row=1, sticky=W, padx = 5, pady = 5);    
+    FrameOutils.grid(row=1, sticky=W, padx = 5, pady = 5);
+    FrameTemps= LabelFrame(fenetre, text='Temps de dérive',borderwidth=1);
+    FrameTemps.grid(row=1, column=2, sticky=W, padx = 5, pady = 5);
 
     bouttonMAJBDD = Button(FrameOutils, text = 'Mise à jour BDD', command = lambda: miseAJour(nom_windfinder));
     bouttonMAJBDD.grid(row=1, sticky=W, padx = 5, pady = 5);
 
     bouttonQuitter = Button(FrameOutils, text = 'Quitter', command = lambda: fenetre.destroy() );
     bouttonQuitter.grid(row=2, sticky=W, padx = 5, pady = 5);
+
+    labelHeure = Label(FrameTemps, text="Heures : ");
+    labelHeure.grid(row=1, column = 1, sticky=W, padx = 5, pady = 5);
+    selectHeure = Spinbox(FrameTemps, from_=0, to=50)
+    selectHeure.selection('from', 4);
+    selectHeure.grid(row=1, column = 2, sticky=W, padx = 5, pady = 5);
+
+    labelMinute = Label(FrameTemps, text="Minutes : ");
+    labelMinute.grid(row=2, column = 1, sticky=W, padx = 5, pady = 5);
+    selectMinute = Spinbox(FrameTemps, from_=0, to=50)
+    selectMinute.selection('from', 4);
+    selectMinute.grid(row=2, column = 2, sticky=W, padx = 5, pady = 5);
     
     FrameLac= LabelFrame(fenetre, text='Lac à étudier',borderwidth=1);
     FrameLac.grid(row=2, sticky=W, padx = 5, pady = 5);
     boutonLac = [];
     
     for i in range(len(nom_lieux)):
-        boutonLac.append(Button(FrameLac, text = str(nom_lieux[i]), command = lambda i=i: anticipationGraphique(i)));#le étrange lambda i=i: permet 
+        boutonLac.append(Button(FrameLac, text = str(nom_lieux[i]), command = lambda i=i: anticipationGraphique( i, int(selectHeure.get())*60 + int(selectMinute.get()) ) ));#le étrange lambda i=i: permet 
         boutonLac[i].grid(row = i, sticky=W, padx = 5, pady = 5);#d'avoir une variable i indépendante pour chaque bouton, sinon tous les boutons sont réaffecté au dernier i.
-        
+    
+    
     fenetre.mainloop();
     return(0);
 

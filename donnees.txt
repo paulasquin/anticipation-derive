@@ -1,3 +1,4 @@
 Nom Lac ; Nom Windfinder ; Zone 1 (latNO,lonNO,largeur (en m), hauteur (en m)) ; Zone 2 ; ZoneN
 Magog ; magog_lac_memphremagog ; 45°20'1.81"N, 72° 2'30.86"O, 950, 2620 ; 45°19'1.53"N, 72° 2'30.65"O, 1260, 650
 North Hartley ; north_hartley_lac_massawippi ; 45°14'40.82"N, 72° 0'24.19"O, 1170, 2000
+Lac à la truite ; magog_lac_memphremagog ; 45°20'55.54"N, 72° 9'0.43"O, 235, 265 ; 45°20'55.54"N, 72° 9'0.43"O, 120, 433

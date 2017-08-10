@@ -5,23 +5,60 @@ import numpy as np
 import matplotlib.pyplot as plt
 import turtle
 
-coefDepVent = 0.002; #1m/s de vent entraine 0,005m/s de déplacement drone
-#coefAff = 0.4;#en px / m
-coefTemps = 3*60*60; #Coefficient du nombre de secondes restées sous 1 vecteur (1 vecteur = 3h)
+coefDepVent = 0.04; #1m/s de vent entraine 0,04m/s de déplacement drone
 
+def getDepRepos(id_lieu, minutesDer):#Nouvelle version
 
-#À continuer : On a id_zoneD, il faut maintenant faire le lien entre cartésien et GPS.
-#CàD : indiquer où doit se poser le drone dans la zoneD en cartésien (centrage de zoneU sur zoneD),
-#et ensuite faire le lien entre cartésien et GPS
+    deb = datetime.datetime.today()+ datetime.timedelta(hours = 0);
+    fin = deb + datetime.timedelta(minutes = minutesDer);
+    vents = gestionBDD.getVent(id_lieu, deb+ datetime.timedelta(hours = -3), fin);#On récupère les vecteurs vents, on commence 3h avant le début pour prendre le vecteur vent qui est actuellement effectif
 
-def getDepRepos(id_lieu):
-    deb = datetime.datetime.today()+ datetime.timedelta(hours = 0)
-    fin = deb + datetime.timedelta(hours = 30);
-    vents = gestionBDD.getVent(id_lieu, deb, fin);
+    heuresMAJ = [2, 5, 8, 11, 14, 17, 20, 23];#Les heures de mise à jour des valeurs de vecteurs
+    
+    #On doit trouver quelles sont les heures du même jour de dérive, et celles du ou des lendemains
+    i = 0;#i est l'index de l'heure D. L'heure D est l'heure de référence du vecteur de début de dérive
+    heureD = deb;
+    while i < len(heuresMAJ) and deb.hour > heuresMAJ[i]:
+        i = i + 1;
+    if i == 0:#Si deb.hour < 2
+        heureD = heureD + datetime.timedelta(days = - 1, hours = -heureD.hour + 23, minutes = -heureD.minute, second = -heureD.seconds);#On set heureD à 23h le jour précédent        
+    else:
+        heureD = heureD + datetime.timedelta(hours = -heureD.hour + heuresMAJ[i-1], minutes = -heureD.minute, seconds = -heureD.second);
+    #On a à présent heureD l'heure de référence antérieur à l'heure de début
+    print('Heure D : ' + str(heureD));
+    
+    lesHeuresRef = [heureD];
+    while lesHeuresRef[-1] + datetime.timedelta(hours = 3) < fin:
+        lesHeuresRef.append(lesHeuresRef[-1]+datetime.timedelta(hours = 3));
+
+    for i in range(len(lesHeuresRef)):
+        print('lesHeuresRef = '+ str(lesHeuresRef[i]));
+
+    coefsTemps = [];#Secondes de dérive par vecteur.
+
+    if(len(lesHeuresRef)) == 1:#Si on est sur seulement une portion de vecteur
+        coefsTemps = [minutesDer*60];#On ajoute directement le temps de dérive, celui appliqué au premier et seul vecteur
+
+    else:#Si on est sur plus d'un vecteur
+        coefsTemps = [(lesHeuresRef[1]-deb).seconds];#On récupère au début le nombre de secondes jusqu'au prochain
+        tempsActuel = lesHeuresRef[1];
+        #Obention du temps qui sépare le temps actuel du temps de fin de vecteur
+        k = 1;#k parcours lesHeuresRef. On part à 1 car on a déja traité le premier vecteur
+        while k < len(lesHeuresRef):#On parcourt les sessions pleines
+            coefsTemps.append(3*3600);#Ajout d'une session complète, i.e. 3h
+            tempsActuel = lesHeuresRef[k];
+            k = k+1;
+        coefsTemps.append( (fin-tempsActuel).seconds );#On ajoute les secondes entre la fin et le début de la dernière session.
+        
+
+    print('coefsTemps = ' + str(coefsTemps));
+    
     dep = [];
-    for i in range(len(vents)):
-        dep.append([vents[i][0]*coefDepVent*coefTemps, vents[i][1]*coefDepVent*coefTemps]);
+    for i in range(len(vents)):#Pondération des déplacements par le temps resté sur chaque vecteur
+        dep.append([vents[i][0]*coefDepVent*coefsTemps[i], vents[i][1]*coefDepVent*coefsTemps[i]]);
+    print('Dep ' + str(dep));
     return(dep);
+
 
 def distanceGPS(a, b):#Donne la distance en mètres entre 2 points GPS, à partir de coord décimales.
     latA = a[0]*math.pi/180;#B2
@@ -60,6 +97,11 @@ def calculAnticipation(id_lieu, dep, pos = [0,0]):#Renvoie la taille de la zone 
     zoneX = int(abs(max(lesX) - min(lesX)));#Largeur de zone occupée par le drone durant son déplacement réduite à un rectangle
     zoneY = int(abs(max(lesY) - min(lesY)));#- en mètres
 
+    if zoneX < 1:
+        zoneX = 1;
+    if zoneY < 1:
+        zoneY = 1; 
+    
     startX = -int(max(lesX))+zoneX; 
     startY = int(max(lesY));
     zoneU = [zoneX, zoneY];
@@ -198,7 +240,7 @@ def affichageAnticipation(zoneU, startU, zoneD, startD, dep, nom_lieu, GPSOptm):
 def choixZoneD(id_lieu, zoneU, pos = [0,0]):#Si pos est donnée comme position GPS du drone et plusieurs positions valables, on choisi la zone valable la plus proche, sinon on choisi la plus grande.
     tropPetit = False;
     [zoneUX, zoneUY] = zoneU;
-    zones = gestionBDD.getZones(id_lieu, zoneU);#Extraction des zones potentiels suceptibles d'accueillir le drone.
+    zones = gestionBDD.getZones(id_lieu, zoneU);#Extraction des zones potentiels suceptibles d'accueillir le drone.   
     
     if len(zones) != 1:#Plusieurs choix valables ou aucun
 
