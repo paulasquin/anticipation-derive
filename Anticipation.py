@@ -5,7 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import turtle
 
-coefDepVent = 0.04; #1m/s de vent entraine 0,04m/s de déplacement drone
+cleAPI = 'AIzaSyCjrrMzllhGLtrCvcudwJuPchbkUHoqdSQ';
+
+coefDepVent = 0.05; #1m/s de vent entraine 0,05m/s de déplacement drone
+
+[resX, resY] = [1280, 1280];
 
 def getDepRepos(id_lieu, minutesDer):#Nouvelle version
 
@@ -46,8 +50,11 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
             k = k+1;
         coefsTemps.append( (fin-tempsActuel).seconds );#On ajoute les secondes entre la fin et le début de la dernière session.
         
+    while(len(coefsTemps) < len(vents)):
+        del vents[-1];
 
     print('coefsTemps = ' + str(coefsTemps));
+    print('vents = ' + str(vents));
     
     dep = [];
     for i in range(len(vents)):#Pondération des déplacements par le temps resté sur chaque vecteur
@@ -56,10 +63,10 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
 
 
 def distanceGPS(a, b):#Donne la distance en mètres entre 2 points GPS, à partir de coord décimales.
-    latA = a[0]*math.pi/180;#B2
-    lonA = a[1]*math.pi/180;#C2
-    latB = b[0]*math.pi/180;#B3
-    lonB = b[1]*math.pi/180;#C3
+    latA = float(a[0])*math.pi/180;#B2
+    lonA = float(a[1])*math.pi/180;#C2
+    latB = float(b[0])*math.pi/180;#B3
+    lonB = float(b[1])*math.pi/180;#C3
     dist=math.acos(math.sin(latA)*math.sin(latB)+math.cos(latA)*math.cos(latB)*math.cos(lonA-lonB))*6371000
     return(int(dist));
 
@@ -134,15 +141,18 @@ def affichageAnticipation(zoneU, startU, zoneD, startD, dep, nom_lieu, GPSOptm):
     [startDX, startDY] = startD;
     [latOptm, lonOptm] = GPSOptm;
 
-    coefAff = arrondir(min([1920/zoneDX, 1920/zoneX, 1080/zoneY, 1080/zoneDY])*0.5, 2);
+    coefAff = arrondir(min([resX/zoneDX, resX/zoneX, resY/zoneY, resY/zoneDY])*0.5, 2);
+
+    #getImageMaps(latNO, lonNO, zoneU#....
+    
     affDep = [];
     for i in range(len(dep)):#Affectation du coefficient d'affichage
         affDepX, affDepY = dep[i][0]*coefAff, dep[i][1]*coefAff;
         affDep.append([affDepX, affDepY]);
         
-    #turtle.setup()#Initialisation de la fenêtre tortue
+    turtle.setup()#Initialisation de la fenêtre tortue
     turtle.TurtleScreen._RUNNING = True;
-    turtle.setup(width=0.9, height=0.9);
+    #turtle.setup(width=resX, height=resY);
     #turtle.setup(width=zoneX*1.1, height=zoneY*1.5);
     
     turtle.title("Anticipation dérive SUWAVE");
@@ -278,4 +288,11 @@ def choixZoneD(id_lieu, zoneU, pos = [0,0]):#Si pos est donnée comme position G
     zoneD = zoneD + [tropPetit]
     return(zoneD);
 
+def latLonToMeters(lat, lon ):
+    # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"
+    originShift = 2 * np.pi * 6378137 / 2.0; # 20037508.342789244
+    x = lon * originShift / 180;
+    y = log(tan((90 + lat) * np.pi / 360 )) / (np.pi / 180);
+    y = y * originShift / 180;
+    return([x, y]);
 

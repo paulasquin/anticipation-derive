@@ -2,6 +2,7 @@ import BotVent
 import gestionBDD
 import Anticipation
 import msvcrt
+#import deCote
 from tkinter import *
 import turtle
 
