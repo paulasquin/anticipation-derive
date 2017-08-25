@@ -150,7 +150,7 @@ def affichageAnticipation(zoneU, startU, zoneD, startD, dep, nom_lieu, GPSOptm):
         affDepX, affDepY = dep[i][0]*coefAff, dep[i][1]*coefAff;
         affDep.append([affDepX, affDepY]);
         
-    turtle.setup()#Initialisation de la fenêtre tortue
+    #turtle.setup()#Initialisation de la fenêtre tortue
     turtle.TurtleScreen._RUNNING = True;
     #turtle.setup(width=resX, height=resY);
     #turtle.setup(width=zoneX*1.1, height=zoneY*1.5);

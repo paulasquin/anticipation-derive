@@ -1,15 +1,15 @@
-###Le Grand ordonateur
+# coding: utf-8
 ###Programme de cohésion du code d'optimisation pour le drone SUWAVE de l'université de Sherbrooke
 ###Par Paul Asquin, créé le 4 Juillet 2017
 
 import sqlite3
 
-nom_BDD = 'environnement.db';
+nom_BDD_env = 'environnement.db';
 nom_donnees = 'donnees.txt';
 
 #Fonction qui permet de créer la BDD de gestion des vecteurs et lieux
 def initialisationBDD():
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''CREATE TABLE IF NOT EXISTS Lieu (id_lieu integer NOT NULL PRIMARY KEY, nom_lieu varchar(50), nom_windfinder varchar(50));''');
     c.execute('''CREATE TABLE IF NOT EXISTS Vecteur (id_lieu integer, date_vecteur datetime, vecteurX float, vecteurY float, type_vecteur varchar(3), date_enregistrement datetime, FOREIGN KEY (id_lieu) References Lieu(id_lieu));''');
@@ -21,7 +21,7 @@ def initialisationBDD():
 
 #Fonction qui commande un appel SQL pour l'ajout d'un vecteur    
 def ajoutVecteur(id_lieu, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     vecteur = [id_lieu, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement];
     c.executemany('''INSERT INTO Vecteur(id_lieu, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement) VALUES (?, ?, ?, ?, ?, ?);''', [vecteur]);
@@ -30,7 +30,7 @@ def ajoutVecteur(id_lieu, date_vecteur, vecteurX, vecteurY, type_vecteur, date_e
     return(0);
 
 def ajoutLieu(id_lieu, nom_lieu, nom_windfinder):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     t = [id_lieu, nom_lieu, nom_windfinder];
     c.executemany('''INSERT INTO Lieu(id_lieu, nom_lieu, nom_windfinder) VALUES (?,?,?);''', [t]);
@@ -39,7 +39,7 @@ def ajoutLieu(id_lieu, nom_lieu, nom_windfinder):
     return(0);
 
 def ajoutZone(id_lieu, zone):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     [id_zone, latNO, lonNO, largeur, hauteur] = zone;
     latNO = convGPSDec(latNO);
@@ -51,7 +51,7 @@ def ajoutZone(id_lieu, zone):
     return(0);
          
 def ajoutDesZones(id_lieu, tabZones):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''DELETE FROM Zone WHERE id_lieu=?''', str(id_lieu));
     c.execute('''SELECT MAX(id_zone) FROM Zone WHERE id_lieu = ?''', str(id_lieu));
@@ -66,7 +66,7 @@ def ajoutDesZones(id_lieu, tabZones):
     return(0);
 
 def ajoutDesLieux(tabLieux):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''SELECT MAX(id_lieu) FROM Lieu''');
     last = c.fetchone()[0];
@@ -82,7 +82,7 @@ def ajoutDesLieux(tabLieux):
     return(0);
 
 def gestionDoublonVecteur(id_lieu, date_vecteur, type_vecteur):
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     t = [id_lieu, date_vecteur, type_vecteur];
     c.executemany('''DELETE FROM Vecteur WHERE id_lieu = ? AND date_vecteur = ? AND type_vecteur = ?''', [t]);
@@ -91,7 +91,7 @@ def gestionDoublonVecteur(id_lieu, date_vecteur, type_vecteur):
     return(0);
     
 def affichageLieu():
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''SELECT * FROM Lieu''');
     res = c.fetchall();
@@ -102,7 +102,7 @@ def affichageLieu():
     return(0);
 
 def affichageZone():
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''SELECT * FROM Zone''');
     res = c.fetchall();
@@ -116,7 +116,7 @@ def affichageZone():
     return(0);
 
 def affichageVecteur():
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''SELECT * FROM Vecteur''');
     conn.commit();
@@ -125,7 +125,7 @@ def affichageVecteur():
 
 def getVent(id_lieu, deb, fin):
     vecteurs = [];
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     c.execute('''SELECT VecteurX, VecteurY FROM Vecteur WHERE type_vecteur = 'air' AND id_lieu = ? AND date_vecteur BETWEEN ? AND ?''', (id_lieu, deb, fin));
     res = c.fetchall();
@@ -141,14 +141,16 @@ def convGPSDec(sexa):#Conversion des coordonnées GPS sexagésimaux vers décima
     deg = sexa[0:sexa.find('°')];
     minu = sexa[sexa.find('°')+1:sexa.find("'")];
     sec = sexa[sexa.find("'")+1:sexa.find('"')];
+
     deci = float(deg) + (float(minu) / 60) + (float(sec) / 3600);
+
     deci = int(deci*10**6)/10**6; #On arrondi à 6 chiffres après la virgules.
     if 'O' in sexa or 'S' in sexa:
         deci = -deci;
     return(deci);
     
 def getZones(id_lieu, zoneU = [0,0]):#Récupération des zones compatibles. Si zoneU = [0,0], on donne toutes les zones.
-    conn = sqlite3.connect(nom_BDD);
+    conn = sqlite3.connect(nom_BDD_env);
     c = conn.cursor();
     if zoneU == [0,0]:#On récupère toutes les zones du lieux
         c.execute('''SELECT id_zone, latNO, lonNO, largeur, hauteur FROM Zone WHERE id_lieu = ?''', str(id_lieu));
