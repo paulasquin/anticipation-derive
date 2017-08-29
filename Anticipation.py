@@ -4,6 +4,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import turtle
+import Calculs
 
 cleAPI = 'AIzaSyCjrrMzllhGLtrCvcudwJuPchbkUHoqdSQ';
 
@@ -62,30 +63,12 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
     return(dep);
 
 
-def distanceGPS(a, b):#Donne la distance en mètres entre 2 points GPS, à partir de coord décimales.
-    latA = float(a[0])*math.pi/180;#B2
-    lonA = float(a[1])*math.pi/180;#C2
-    latB = float(b[0])*math.pi/180;#B3
-    lonB = float(b[1])*math.pi/180;#C3
-    dist=math.acos(math.sin(latA)*math.sin(latB)+math.cos(latA)*math.cos(latB)*math.cos(lonA-lonB))*6371000
-    return(int(dist));
-
-def angleGPS(x,y):#Donne l'angle en ° relatif GPS d'un déplacement [x, y]
-    #Latitude : longitude = 0.
-    lat=arrondir(y/6371000*180/math.pi, 6);
-    lon=arrondir(x/6371000*180/math.pi, 6);
-    return([lat, lon]);
-
 ##latA = 45.333836;
 ##lonA = 72.041905;
 ##latB = 45.317091;
 ##lonB = 72.041847;
-##[latC, lonC] = angleGPS(0, -1860);
-##print(distanceGPS([latB, lonB], [latA+latC, lonA+lonC]));
-
-def arrondir(x, n):#Arrondir x à n chiffre après la virgule
-    x = int(x*10**n)/10**n;
-    return(x);
+##[latC, lonC] = Calculs.angleGPS(0, -1860);
+##print(Calculs.distanceGPS([latB, lonB], [latA+latC, lonA+lonC]));
 
 def calculAnticipation(id_lieu, dep, pos = [0,0]):#Renvoie la taille de la zone de dérive et le lieu de pose optimal. 
     lesX = [0];                                   #pos est facultatif : position du drone dans le lac si cela doit influencer le choix de la zone
@@ -126,8 +109,8 @@ def calculAnticipation(id_lieu, dep, pos = [0,0]):#Renvoie la taille de la zone 
     startU = [startX, startY];#Lieu de départ dans la zone U par rapport à l'angle NO (en cartésien)
     startD = [startDX, startDY];#Lieu de départ dans la zone D par rapport à l'angle NO
                             
-    [latRel, lonRel]=angleGPS(startDX, startDY)#Calcul latitude et longitude relative GPS par rapport au point NO zone D
-    GPSOptm=[arrondir(latNO-latRel,6), arrondir(lonNO+lonRel,6)];
+    [latRel, lonRel]=Calculs.angleGPS(startDX, startDY)#Calcul latitude et longitude relative GPS par rapport au point NO zone D
+    GPSOptm=[Calculs.arrondir(latNO-latRel,6), Calculs.arrondir(lonNO+lonRel,6)];
 
     zoneD = [id_zone, latNO, lonNO, zoneDX, zoneDY, tropPetit];
     
@@ -141,7 +124,7 @@ def affichageAnticipation(zoneU, startU, zoneD, startD, dep, nom_lieu, GPSOptm):
     [startDX, startDY] = startD;
     [latOptm, lonOptm] = GPSOptm;
 
-    coefAff = arrondir(min([resX/zoneDX, resX/zoneX, resY/zoneY, resY/zoneDY])*0.5, 2);
+    coefAff = Calculs.arrondir(min([resX/zoneDX, resX/zoneX, resY/zoneY, resY/zoneDY])*0.5, 2);
 
     #getImageMaps(latNO, lonNO, zoneU#....
     
@@ -287,12 +270,4 @@ def choixZoneD(id_lieu, zoneU, pos = [0,0]):#Si pos est donnée comme position G
         print('Attention, zone trop petite');
     zoneD = zoneD + [tropPetit]
     return(zoneD);
-
-def latLonToMeters(lat, lon ):
-    # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"
-    originShift = 2 * np.pi * 6378137 / 2.0; # 20037508.342789244
-    x = lon * originShift / 180;
-    y = log(tan((90 + lat) * np.pi / 360 )) / (np.pi / 180);
-    y = y * originShift / 180;
-    return([x, y]);
 

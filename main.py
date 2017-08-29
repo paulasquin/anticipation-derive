@@ -6,6 +6,7 @@ import msvcrt
 #import deCote
 from tkinter import *
 import turtle
+import os
 
 #À développer : Mise en page (affiché nord)
 #Etudier l'intégration des scripts dans px4 : dilemne python et C. Convertir ou rendre compatible
@@ -15,11 +16,6 @@ import turtle
 tabDonnees = gestionBDD.lectureDonnees();
 nom_lieux = [ligne[0] for ligne in tabDonnees];
 nom_windfinder = [ligne[1] for ligne in tabDonnees];
-
-def miseAJour(lieuxVent):
-    gestionBDD.ajoutDesLieux(lieuxVent);
-    BotVent.recuperationDonneesVent(tabDonnees);
-    return(0);
 
 def anticipationGraphique(id_lieu, minutesDer):
     print('\n\n -------------------- \n');
@@ -40,7 +36,7 @@ def interfaceGraphique():
     FrameTemps= LabelFrame(fenetre, text='Temps de dérive',borderwidth=1);
     FrameTemps.grid(row=1, column=2, sticky=W, padx = 5, pady = 5);
 
-    bouttonMAJBDD = Button(FrameOutils, text = 'Mise à jour BDD', command = lambda: miseAJour(nom_windfinder));
+    bouttonMAJBDD = Button(FrameOutils, text = 'Mise à jour BDD', command = lambda: gestionBDD.miseAJour());
     bouttonMAJBDD.grid(row=1, sticky=W, padx = 5, pady = 5);
 
     bouttonQuitter = Button(FrameOutils, text = 'Quitter', command = lambda: fenetre.destroy() );

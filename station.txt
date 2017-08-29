@@ -1,0 +1,4 @@
+Nom_Windfinder ; lat ; lon
+magog_lac_memphremagog ; 45.2698 ; -72.1722
+north_hartley_lac_massawippi ; 45.2767 ; -71.9757
+lennoxville ; 45.3686 ; -71.8177

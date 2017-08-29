@@ -107,38 +107,3 @@ def decompositionTab(corps):
     tab1 = corps[debutTab1:debutTab2];
     tab2 = corps[debutTab2:finTab2];
     return(titre, tab1, tab2);
-    
-#Alimentation BDD
-def recuperationDonneesVent(lieuxVent):
-    print('\n\nTéléchargement des données des vents depuis windfinder.com\n');
-    type_vecteur = 'air';
-    dateActuelle = datetime.datetime.today()
-
-    for i in range(len(lieuxVent)):
-        id_lieu = i;
-        nom_lieu = lieuxVent[i][0];
-        nom_windfinder = lieuxVent[i][1];
-        
-        #---Section appel des fonctions pour recueil depuis site---
-        print('\nRécupération des prévisions vents de ' + nom_lieu);
-        donnees = [];
-        corps = chargementPage(nom_windfinder);
-        titre, tab1, tab2 = decompositionTab(corps);
-
-        dates = conversionDate(trouvDate(tab1) + trouvDate(tab2));#Tableau de 4 (jours)
-        heures = genHeures();#Génération heures ( 2, 5, 8, 11...) Tableau de 8
-        lesVecteurX1, lesVecteurY1 = vecteurVent(tab1);
-        lesVecteurX2, lesVecteurY2 = vecteurVent(tab2);
-        lesVecteurX = lesVecteurX1 + lesVecteurX2; #Tableau de 8*4 
-        lesVecteurY = lesVecteurY1 + lesVecteurY2; #Tableau de 8*4 
-
-        #---Section commande ajout données---
-        k = 0;
-        for jour in dates:#défillement des jours
-            for heure in heures:#défillement des heures
-                date_vecteur = datetime.datetime(jour.year, jour.month, jour.day, heure);
-                gestionBDD.gestionDoublonVecteur(id_lieu, date_vecteur, type_vecteur);
-                gestionBDD.ajoutVecteur(id_lieu, date_vecteur, lesVecteurX[k], lesVecteurY[k], type_vecteur, dateActuelle);
-                k = k+1;
-        print('OK');
-    return(0);
