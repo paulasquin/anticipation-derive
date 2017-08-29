@@ -65,6 +65,7 @@ def affichageStation():
 def affichageZone():
     conn = sqlite3.connect(nom_BDD);
     c = conn.cursor();
+    print('\n\nAffichage Zone : \n\n');
     c.execute('''SELECT * FROM Zone''');
     res = c.fetchall();
     for i in range(len(res)):
@@ -133,15 +134,17 @@ def ajoutDesZones():#Ajoute les zones à partir des données des lacs
                   
         c.execute('''SELECT id_point, lat, lon FROM Point WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) ;''', (latSO,latNE,lonSO,lonNE));
         tabPoints = c.fetchall();
+        markers = [];
         for i in range(len(tabPoints)):
             point = tabPoints[i];
+            markers.append( str(point[1]) + ',' + str(point[2]) );
             nouvZones = BotZone.creaZone(point, tabPoints);
             print(nouvZones);
             if nouvZones != 0:
                 zones = zones + nouvZones;
                 for k in range(len(nouvZones)):
                     ajoutZone(nouvZones[k]);
-
+        Maps.getImageMaps(markers);
 ##                markers = [];
 ##                for i in range(len(zones)):
 ##                    markers.append( str(zones[i][0]) + ',' + str(zones[i][1]) );
@@ -285,6 +288,7 @@ initialisationBDD();
 ajoutDesStations();
 ajoutDesLacs();
 ajoutDesPoints();
-ajoutDesZones();
+#ajoutDesZones();
+#affichageZone();
 #affichageStation();
-#affichageLac();
+affichageLac();

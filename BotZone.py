@@ -40,11 +40,13 @@ def creaZone(point, tabPoints):#Définir le plus grand rectangle possible partan
     print('res hauteur = ' + str(res));
     if len(res) > 1:#Si on a plus d'un point en dessous du point référent (on peut construite une zone)
         hauteur = 0;
+        lesDistances = [];
         colonne = [];
         for i in range(len(res)-1):
             dist = Calculs.distanceGPS(res[i], res[i+1]);
             if dist < distanceMaxCons:
                 hauteur = hauteur + dist;#On ajoute la distance entre les points à la hauteur de la zone
+                lesDistances.append(hauteur);
                 colonne.append(res[i]);
             else:
                 break;
@@ -69,16 +71,18 @@ def creaZone(point, tabPoints):#Définir le plus grand rectangle possible partan
             else:
                 break;
 
-    print(largeurLigne);
-    
-    if min(largeurLigne) == 0:#Si on a trouvé aucune longueur, pas possible de créer une zone 2D
+    while(len(colonne) > 1 and min(largeurLigne) == 0):#Si on la largeur minimum est nulle, cette zone ne peut pas être 2D, on doit donc retrancher une ligne et vérifier à nouveau
+        del largeurLigne[-1];
+        del colonne[-1];#On supprime l'élément le plus bas de la colonne
+        hauteur = hauteur - lesDistances[-1];#On retranche la hauteur de la colonne
+        del lesDistances[-1];
+        
+    if min(largeurLigne) == 0:#Si pas de solution de largeur trouvée, on ne peut pas construire de zone
         return(0);
     largeur = min(largeurLigne);
 
     zoneLimLarg = [lat, lon, largeur, hauteur];
 
-
-###--------------faire la hauteur limitante
 
     ##-------------------------------------------------##
     ##----------- Hauteur limitante--------------------##
@@ -92,10 +96,12 @@ def creaZone(point, tabPoints):#Définir le plus grand rectangle possible partan
     if len(res) > 1:#Si on a plus d'un point en dessous du point référent (on peut construite une zone)
         largeur = 0;
         ligne = [];
+        lesDistances = [];
         for i in range(len(res)-1):
             dist = Calculs.distanceGPS(res[i], res[i+1]);
             if dist < distanceMaxCons:
                 largeur = largeur + dist;#On ajoute la distance entre les points à la hauteur de la zone
+                lesDistances.append(dist);
                 ligne.append(res[i]);
             else:
                 break;
@@ -119,7 +125,13 @@ def creaZone(point, tabPoints):#Définir le plus grand rectangle possible partan
             else:
                 break;
 
-    if min(hauteurColonne) == 0:#Si on a trouvé aucune longueur, pas possible de créer une zone 2D
+    while(len(ligne) > 1 and min(hauteurColonne) == 0):#Si on la largeur minimum est nulle, cette zone ne peut pas être 2D, on doit donc retrancher une ligne et vérifier à nouveau
+        del hauteurColonne[-1];
+        del ligne[-1];#On supprime l'élément le plus bas de la colonne
+        largeur = largeur - lesDistances[-1];#On retranche la hauteur de la colonne
+        del lesDistances[-1];
+        
+    if min(hauteurColonne) == 0:#Si pas de solution de largeur trouvée, on ne peut pas construire de zone
         return(0);
     hauteur = min(hauteurColonne);
 
