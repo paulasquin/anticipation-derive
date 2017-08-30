@@ -19,7 +19,7 @@ def distanceGPS(a, b):#Donne la distance en mètres entre 2 points GPS, à parti
     latB = float(b[0])*math.pi/180;#B3
     lonB = float(b[1])*math.pi/180;#C3
     dist=math.acos(math.sin(latA)*math.sin(latB)+math.cos(latA)*math.cos(latB)*math.cos(lonA-lonB))*6371000
-    return(int(dist));
+    return(int(abs(dist)));
 
 def angleGPS(x,y):#Donne l'angle en ° relatif GPS d'un déplacement [x, y]
     #Latitude : longitude = 0.

@@ -8,18 +8,22 @@ import Calculs
 import BotLac
 import BotZone
 import Maps
+import datetime
+import BotVent
 
 nom_BDD = 'environnement.db';
 nom_station = 'station.txt';
 nom_lacs = 'nom_lac.txt';
 nom_points = 'points_lacs.txt';
+affichageCartes = False;
+affichageChargement = True;
 
 #Fonction qui permet de créer la BDD de gestion des vecteurs et lieux
 def initialisationBDD():
     conn = sqlite3.connect(nom_BDD);
     c = conn.cursor();
     c.execute('''CREATE TABLE IF NOT EXISTS Lac (id_lac integer NOT NULL PRIMARY KEY, nom_lac varchar(100), id_station integer, adresse varchar(100), latCe float, lonCe float, latNE float, lonNE float, latSO float, lonSO float, FOREIGN KEY (id_station) References Station(id_station));''');
-    c.execute('''CREATE TABLE IF NOT EXISTS Vecteur (id_lac integer, date_vecteur datetime, vecteurX float, vecteurY float, type_vecteur varchar(3), date_enregistrement datetime, FOREIGN KEY (id_lac) References Lieu(id_lac));''');
+    c.execute('''CREATE TABLE IF NOT EXISTS Vecteur (id_station integer, date_vecteur datetime, vecteurX float, vecteurY float, type_vecteur varchar(3), date_enregistrement datetime, FOREIGN KEY (id_station) References Station(id_station));''');
     c.execute('''CREATE TABLE IF NOT EXISTS Zone (id_lac integer, id_zone integer, latNO float, lonNO float, largeur integer, hauteur integer, FOREIGN KEY (id_lac) References Lac(id_lac), PRIMARY KEY(id_lac, id_zone));''');
     c.execute('''CREATE TABLE IF NOT EXISTS Point (id_point integer NOT NULL PRIMARY KEY, lat float, lon float );''');
     c.execute('''CREATE TABLE IF NOT EXISTS Station (id_station integer NOT NULL PRIMARY KEY, nom_windfinder varchar(50), lat float, lon float );''');
@@ -29,6 +33,8 @@ def initialisationBDD():
 
 def miseAJour():
     os.remove(nom_BDD);
+    initialisationBDD();
+    ajoutDesStations();
     ajoutDesLacs();
     ajoutDesVents();
     ajoutDesPoints();
@@ -44,7 +50,6 @@ def affichageLac():
         chaine = '';
         for c in res[i]:
             chaine = chaine + str(c) + ' ';
-        print(chaine);
     conn.close;
     return(0);
 
@@ -86,10 +91,10 @@ def affichageVecteur():
     return(0);
 
 #Fonction qui commande un appel SQL pour l'ajout d'un vecteur    
-def ajoutVecteur(id_lac, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement):
+def ajoutVecteur(id_station, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement):
     conn = sqlite3.connect(nom_BDD);
     c = conn.cursor();    
-    c.execute('''INSERT INTO Vecteur(id_lac, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement) VALUES (?, ?, ?, ?, ?, ?);''', (id_lac, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement));
+    c.execute('''INSERT INTO Vecteur(id_station, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement) VALUES (?, ?, ?, ?, ?, ?);''', (id_station, date_vecteur, vecteurX, vecteurY, type_vecteur, date_enregistrement));
     conn.commit();
     conn.close();
     return(0);
@@ -119,15 +124,16 @@ def ajoutZone(id_lac, id_zone, latNO, lonNO, largeur, hauteur):
     return(0);
          
 def ajoutDesZones():#Ajoute les zones à partir des données des lacs
-    zones = [];
+
     conn = sqlite3.connect(nom_BDD);
     c = conn.cursor();
 
     c.execute('''SELECT MAX(id_lac) FROM Lac;''');
     maxLac = int(c.fetchall()[0][0]);
 
-    for id_lac in range(maxLac+1):    
-        print('\n\nAjout des Zones pour id_lac = ' + str(id_lac) + '/' + str(maxLac) );
+    for id_lac in range(maxLac+1):
+        id_zone = 0;
+        print('\n\nAjout des Zones pour id_lac = ' + str(id_lac + 1) + '/' + str(maxLac + 1) );
         c.execute('''SELECT latCe, lonCe, latNE, lonNE, latSO, lonSO FROM Lac WHERE id_lac = ?;''', (str(id_lac)) );
         [latCe, lonCe, latNE, lonNE, latSO, lonSO] = c.fetchall()[0];
         #latNE = latMax ; latSO = latMin ; lonNE = lonMax ; lonSO = lonMin
@@ -135,20 +141,25 @@ def ajoutDesZones():#Ajoute les zones à partir des données des lacs
         c.execute('''SELECT id_point, lat, lon FROM Point WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) ;''', (latSO,latNE,lonSO,lonNE));
         tabPoints = c.fetchall();
         markers = [];
+        print('On a ' + str(len(tabPoints)) + ' points');
+        
         for i in range(len(tabPoints)):
+
+            if affichageChargement:
+                print('id_lac ' + str(id_lac) + '/' + str(maxLac) + ', Point ' + str(i) + '/' + str(len(tabPoints)-1));
+            
             point = tabPoints[i];
+            #print('\nUtilisation du point ' + str(point[0]) + ': '+ str(point[1]) + ',' + str(point[2]) );
             markers.append( str(point[1]) + ',' + str(point[2]) );
             nouvZones = BotZone.creaZone(point, tabPoints);
-            print(nouvZones);
             if nouvZones != 0:
-                zones = zones + nouvZones;
+                #print(nouvZones);
                 for k in range(len(nouvZones)):
-                    ajoutZone(nouvZones[k]);
-        Maps.getImageMaps(markers);
-##                markers = [];
-##                for i in range(len(zones)):
-##                    markers.append( str(zones[i][0]) + ',' + str(zones[i][1]) );
-##                Maps.getImageMaps(markers);
+                    [lat, lon, largeur, hauteur] = nouvZones[k];
+                    ajoutZone(id_lac, id_zone, lat, lon, largeur, hauteur);
+                    id_zone = id_zone + 1;
+        if affichageCartes:
+            Maps.getImageMaps(markers);
     conn.commit();
     conn.close;
     return(0);
@@ -167,6 +178,15 @@ def trouveWindFinder(latCe, lonCe):#indique l' id_station de la station WindFind
         lonStation = tabStation[i][3];
         distance.append(Calculs.distanceGPS([latCe, lonCe],[latStation, lonStation]));
     id_station = distance.index(min(distance));
+    return(id_station);
+
+def id_lac2id_station(id_lac):
+    conn = sqlite3.connect(nom_BDD);
+    c = conn.cursor();
+    c.execute('''SELECT latCe, lonCe FROM Lac WHERE id_lac = ?;''', (id_lac,));
+    res = c.fetchall();
+    [latCe, lonCe] = res[0];
+    id_station = trouveWindFinder(latCe, lonCe);
     return(id_station);
 
 def ajoutDesLacs():#ajout des lacs indiqués dans le fichier nom_lacs
@@ -224,21 +244,21 @@ def ajoutDesVents():
     type_vecteur = 'air';
     dateActuelle = datetime.datetime.today()
 
-    for i in range(len(lieuxVent)):
-        id_lac = i;
-        nom_lieu = lieuxVent[i][0];
-        nom_windfinder = lieuxVent[i][1];
+    lieuxVent = getStations();
+    
+    for id_station in range(len(lieuxVent)):
+        nom_windfinder = lieuxVent[id_station];
         
         #---Section appel des fonctions pour recueil depuis site---
-        print('\nRécupération des prévisions vents de ' + nom_lieu);
+        print('\nRécupération des prévisions vents de ' + nom_windfinder);
         donnees = [];
-        corps = chargementPage(nom_windfinder);
-        titre, tab1, tab2 = decompositionTab(corps);
+        corps = BotVent.chargementPage(nom_windfinder);
+        titre, tab1, tab2 = BotVent.decompositionTab(corps);
 
-        dates = conversionDate(trouvDate(tab1) + trouvDate(tab2));#Tableau de 4 (jours)
-        heures = genHeures();#Génération heures ( 2, 5, 8, 11...) Tableau de 8
-        lesVecteurX1, lesVecteurY1 = vecteurVent(tab1);
-        lesVecteurX2, lesVecteurY2 = vecteurVent(tab2);
+        dates = BotVent.conversionDate(BotVent.trouvDate(tab1) + BotVent.trouvDate(tab2));#Tableau de 4 (jours)
+        heures = BotVent.genHeures();#Génération heures ( 2, 5, 8, 11...) Tableau de 8
+        lesVecteurX1, lesVecteurY1 = BotVent.vecteurVent(tab1);
+        lesVecteurX2, lesVecteurY2 = BotVent.vecteurVent(tab2);
         lesVecteurX = lesVecteurX1 + lesVecteurX2; #Tableau de 8*4 
         lesVecteurY = lesVecteurY1 + lesVecteurY2; #Tableau de 8*4 
 
@@ -247,16 +267,16 @@ def ajoutDesVents():
         for jour in dates:#défillement des jours
             for heure in heures:#défillement des heures
                 date_vecteur = datetime.datetime(jour.year, jour.month, jour.day, heure);
-                gestionBDD.ajoutVecteur(id_lac, date_vecteur, lesVecteurX[k], lesVecteurY[k], type_vecteur, dateActuelle);
+                ajoutVecteur(id_station, date_vecteur, lesVecteurX[k], lesVecteurY[k], type_vecteur, dateActuelle);
                 k = k+1;
         print('OK');
     return(0);
 
-def getVent(id_lac, deb, fin):
+def getVent(id_station, deb, fin):
     vecteurs = [];
     conn = sqlite3.connect(nom_BDD);
     c = conn.cursor();
-    c.execute('''SELECT VecteurX, VecteurY FROM Vecteur WHERE type_vecteur = 'air' AND id_lac = ? AND date_vecteur BETWEEN ? AND ?''', (id_lac, deb, fin));
+    c.execute('''SELECT VecteurX, VecteurY FROM Vecteur WHERE type_vecteur = 'air' AND id_station = ? AND date_vecteur BETWEEN ? AND ?''', (id_station, deb, fin));
     res = c.fetchall();
     
     for i in range(len(res)):
@@ -264,6 +284,7 @@ def getVent(id_lac, deb, fin):
     conn.commit();
     conn.close;
     return(vecteurs);
+
     
 def getZones(id_lac, zoneU = [0,0]):#Récupération des zones compatibles. Si zoneU = [0,0], on donne toutes les zones.
     conn = sqlite3.connect(nom_BDD);
@@ -283,12 +304,31 @@ def getZones(id_lac, zoneU = [0,0]):#Récupération des zones compatibles. Si zo
     conn.close;
     return(zones);
 
-os.remove(nom_BDD);
+def getLacs():
+    conn = sqlite3.connect(nom_BDD);
+    c = conn.cursor();
+    c.execute('''SELECT nom_lac FROM Lac ORDER BY id_lac ASC''');
+    res = c.fetchall();
+
+    noms_lac = [];
+    for i in range(len(res)):
+        noms_lac.append(res[i][0]);
+    
+    return(noms_lac);
+
+def getStations():
+    conn = sqlite3.connect(nom_BDD);
+    c = conn.cursor();
+    c.execute('''SELECT nom_windfinder FROM Station ORDER BY id_station ASC''');
+    res = c.fetchall();
+
+    noms_station = [];
+    for i in range(len(res)):
+        noms_station.append(res[i][0]);
+    
+    return(noms_station);
+
 initialisationBDD();
-ajoutDesStations();
-ajoutDesLacs();
-ajoutDesPoints();
-#ajoutDesZones();
 #affichageZone();
 #affichageStation();
-affichageLac();
+#affichageLac();

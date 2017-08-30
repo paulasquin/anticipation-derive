@@ -2,7 +2,7 @@ import math
 import webbrowser
 
 maptype = 'hybrid';
-apiKey = 'AIzaSyCjrrMzllhGLtrCvcudwJuPchbkUHoqdSQ';
+apiKey = '';
 showLabels = 0;
 language = '';
 
@@ -27,10 +27,14 @@ def getImageMaps(markerlist):
         
     markers = '&markers=';
     for idx in range(len(markerlist)):
-        if idx < len(markerlist):
-            markers = markers + markerlist[idx] + '%7C';
+        if len(markers) < 1900:#Limite d'affichage des caractéres
+            if idx < len(markerlist):
+                markers = markers + markerlist[idx] + '%7C';
+            else:
+                markers = markers + markerlist[idx];
         else:
-            markers = markers + markerlist[idx];
+            print('Limitation affichage carte : trop de point pour url');
+            break;
     if showLabels == 0:
         labelsStr = '&style=feature:all|element:labels|visibility:off';
     else:
@@ -52,15 +56,6 @@ def getImageMaps(markerlist):
         
     sensor = '&sensor=false';
     url = preamble + location + zoomStr + sizeStr + maptypeStr + form + markers + labelsStr + languageStr + sensor + keyStr;
-
-    print(url);
     webbrowser.open(url);
-
-##    urlwrite(url,filename);
-##    [M, Mcolor] = imread(filename);
-##    M = cast(M,'double');
-##    delete(filename); # delete temp file
-    
-#getImageMaps();
-
+    return(0);
 

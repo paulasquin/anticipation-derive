@@ -1,9 +1,7 @@
 # coding: utf-8
-import BotVent
 import gestionBDD
 import Anticipation
 import msvcrt
-#import deCote
 from tkinter import *
 import turtle
 import os
@@ -13,22 +11,23 @@ import os
 #Dans px4: intégration aux capteurs. Détecter trop proche de la berge, calcul nouveau point et commande redécollage.
 #Décallage de la zoneU quand zoneD trop petite
 
-tabDonnees = gestionBDD.lectureDonnees();
-nom_lieux = [ligne[0] for ligne in tabDonnees];
-nom_windfinder = [ligne[1] for ligne in tabDonnees];
+nom_lacs = gestionBDD.getLacs();
 
-def anticipationGraphique(id_lieu, minutesDer):
+def anticipationGraphique(id_lac, minutesDer):
+    id_station = gestionBDD.id_lac2id_station(id_lac);
+    
     print('\n\n -------------------- \n');
     if minutesDer == 0:
         print('Valeur entrée laissée à 0. On prend 15 minutes par défaut');
         minutesDer = 15;
     print('\nDérive de ' + str(minutesDer) + ' minutes');
-    dep = Anticipation.getDepRepos(id_lieu, minutesDer);
-    zoneU, start, zoneD, startD, GPSOptm = Anticipation.calculAnticipation(id_lieu, dep);
-    Anticipation.affichageAnticipation(zoneU, start, zoneD, startD, dep, nom_lieux[id_lieu], GPSOptm);
+    dep = Anticipation.getDepRepos(id_station, minutesDer);
+    zoneU, start, zoneD, startD, GPSOptm = Anticipation.calculAnticipation(id_lac, dep);
+    Anticipation.affichageAnticipation(zoneU, start, zoneD, startD, dep, nom_lacs[id_lac], GPSOptm);
     return(0);
 
 def interfaceGraphique():
+    
     fenetre = Tk();
     fenetre.title('Interface Anticipation');
     FrameOutils= LabelFrame(fenetre, text='Outils',borderwidth=1);
@@ -58,8 +57,8 @@ def interfaceGraphique():
     FrameLac.grid(row=2, sticky=W, padx = 5, pady = 5);
     boutonLac = [];
     
-    for i in range(len(nom_lieux)):
-        boutonLac.append(Button(FrameLac, text = str(nom_lieux[i]), command = lambda i=i: anticipationGraphique( i, int(selectHeure.get())*60 + int(selectMinute.get()) ) ));#le étrange lambda i=i: permet 
+    for i in range(len(nom_lacs)):
+        boutonLac.append(Button(FrameLac, text = str(nom_lacs[i]), command = lambda i=i: anticipationGraphique( i, int(selectHeure.get())*60 + int(selectMinute.get()) ) ));#le étrange lambda i=i: permet 
         boutonLac[i].grid(row = i, sticky=W, padx = 5, pady = 5);#d'avoir une variable i indépendante pour chaque bouton, sinon tous les boutons sont réaffecté au dernier i.
     
     

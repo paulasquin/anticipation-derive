@@ -2,7 +2,6 @@
 import urllib
 import urllib.request
 import re
-import gestionBDD
 import datetime
 import math
 import numpy as np

@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import turtle
 import Calculs
 
-cleAPI = 'AIzaSyCjrrMzllhGLtrCvcudwJuPchbkUHoqdSQ';
-
 coefDepVent = 0.05; #1m/s de vent entraine 0,05m/s de déplacement drone
 
 [resX, resY] = [1280, 1280];
