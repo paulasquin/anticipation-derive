@@ -15,7 +15,7 @@ nom_BDD = 'environnement.db';
 nom_station = 'station.txt';
 nom_lacs = 'nom_lac.txt';
 nom_points = 'points_lacs.txt';
-affichageCartes = False;
+affichageCartes = True;
 affichageChargement = True;
 
 #Fonction qui permet de créer la BDD de gestion des vecteurs et lieux
@@ -332,3 +332,4 @@ initialisationBDD();
 #affichageZone();
 #affichageStation();
 #affichageLac();
+#affichageVecteur();
