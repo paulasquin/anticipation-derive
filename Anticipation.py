@@ -10,9 +10,9 @@ coefDepVent = 0.05; #1m/s de vent entraine 0,05m/s de déplacement drone
 
 [resX, resY] = [1280, 1280];
 
-def getDepRepos(id_lieu, minutesDer):#Nouvelle version
+def getDepRepos(id_lieu, minutesDer, minutesAvDeb):#Nouvelle version
 
-    deb = datetime.datetime.today()+ datetime.timedelta(hours = 0);
+    deb = datetime.datetime.today()+ datetime.timedelta(minutes = minutesAvDeb);
     fin = deb + datetime.timedelta(minutes = minutesDer);
     vents = gestionBDD.getVent(id_lieu, deb+ datetime.timedelta(hours = -3), fin);#On récupère les vecteurs vents, on commence 3h avant le début pour prendre le vecteur vent qui est actuellement effectif
 
@@ -24,7 +24,7 @@ def getDepRepos(id_lieu, minutesDer):#Nouvelle version
     while i < len(heuresMAJ) and deb.hour > heuresMAJ[i]:
         i = i + 1;
     if i == 0:#Si deb.hour < 2
-        heureD = heureD + datetime.timedelta(days = - 1, hours = -heureD.hour + 23, minutes = -heureD.minute, second = -heureD.seconds, microseconds = -heureD.microsecond);#On set heureD à 23h le jour précédent        
+        heureD = heureD + datetime.timedelta(days = - 1, hours = -heureD.hour + 23, minutes = -heureD.minute, seconds = -heureD.second, microseconds = -heureD.microsecond);#On set heureD à 23h le jour précédent        
     else:
         heureD = heureD + datetime.timedelta(hours = -heureD.hour + heuresMAJ[i], minutes = -heureD.minute, seconds = -heureD.second, microseconds = -heureD.microsecond);
     #On a à présent heureD l'heure de référence antérieur à l'heure de début
