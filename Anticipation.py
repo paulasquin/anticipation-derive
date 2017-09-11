@@ -43,7 +43,7 @@ def getDepRepos(id_lieu, minutesDer, minutesAvDeb):#Nouvelle version
         tempsActuel = lesHeuresRef[1];
         #Obention du temps qui sépare le temps actuel du temps de fin de vecteur
         k = 1;#k parcours lesHeuresRef. On part à 1 car on a déja traité le premier vecteur
-        while k < len(lesHeuresRef):#On parcourt les sessions pleines
+        while k + 1 < len(lesHeuresRef):#On parcourt les sessions pleines
             coefsTemps.append(3*3600);#Ajout d'une session complète, i.e. 3h
             tempsActuel = lesHeuresRef[k];
             k = k+1;
