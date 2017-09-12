@@ -6,7 +6,7 @@ from tkinter import *
 import turtle
 import os
 import datetime
-
+#Ete 2017
 #À développer : Mise en page (affiché nord)
 #Etudier l'intégration des scripts dans px4 : dilemne python et C. Convertir ou rendre compatible
 #Dans px4: intégration aux capteurs. Détecter trop proche de la berge, calcul nouveau point et commande redécollage.
